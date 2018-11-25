@@ -6,6 +6,9 @@ from torch import nn
 from torch import optim
 from torchvision import datasets, models, transforms
 
+# Resources:
+#   + https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch
+
 def _build_classifier(hp):
     classifier = []
     layers = hp['layers']
@@ -17,25 +20,48 @@ def _build_classifier(hp):
     classifier.extend(layer0)
     
     for i in range(1, len(layers)):
-        layer = [nn.Linear(layers[i-1], layers[i]),
-                 nn.ReLU(),
-                 nn.Dropout(hp['dropout'])]
+        layer = [nn.Linear(layers[i-1], layers[i], bias=True),
+                 nn.ReLU()]
         classifier.extend(layer)
 
-    classifier.append(nn.Linear(layers[-1], hp['nfeatures']))
+    classifier.extend([nn.Linear(layers[-1], hp['nfeatures'], bias=True), 
+                       nn.LogSoftmax(dim=1)])
     return nn.Sequential(*classifier)
 
 DEFAULT_HYPER_PARAMETERS = {
-    'architecture': 'vgg11_bn',
-    'criterion': 'CrossEntropyLoss',
+    'architecture': 'vgg19_bn',
+    'criterion': 'NLLLoss',
     'dropout': 0.5,
-    'epochs': 3,
-    'layers': [4096, 2048],
-    'learning_rate': 0.01,
+    'epochs': 6,
+    'layers': [1024, 256],
+    'learning_rate': 0.001,
     'nfeatures': 102,
-    'ninputs': 25088,
+    'ninputs': 32,
     'optimizer': 'Adam',
 }
+
+MODEL_NINPUTS = {
+    'alexnet': 9216,
+    'densenet121': 1024,
+    'squeezenet': 106496,
+    'vgg11_bn': 25088,
+    'vgg13_bn': 25088,
+    'vgg16_bn': 25088,
+    'vgg19_bn': 25088,
+    'vgg11': 25088,
+    'vgg13': 25088,
+    'vgg16': 25088,
+    'vgg19': 25088,
+}
+
+CLASSIFIER_MODELS = ["densenet121", 'vgg11_bn', 'vgg13_bn',
+    'vgg16_bn',
+    'vgg19_bn',
+    'vgg11',
+    'vgg13',
+    'vgg16',
+    'vgg19',
+]
 
 class Model():
     """A Model is a container for a neural network."""
@@ -45,10 +71,21 @@ class Model():
 
         self.network = getattr(models, hp['architecture'])(pretrained=True)
         for param in self.network.parameters():
-            param.requires_grad = False
-        self.network.classifier = _build_classifier(hp)
+            if param.requires_grad:
+                param.requires_grad = False
+
+        if hp['architecture'] in MODEL_NINPUTS:
+            hp['ninputs'] = MODEL_NINPUTS[hp['architecture']]
+
+        if hp['architecture'] in CLASSIFIER_MODELS:
+            self.network.classifier = _build_classifier(hp)    
+            self.optimizer = getattr(optim, hp['optimizer'])(self.network.classifier.parameters(), lr=hp['learning_rate'])
+        else:
+            self.network.fc = _build_classifier(hp)
+            self.optimizer = getattr(optim, hp['optimizer'])(self.network.fc.parameters(), lr=hp['learning_rate'])
+           
         self.criterion = getattr(nn, hp['criterion'])()
-        self.optimizer = getattr(optim, hp['optimizer'])(self.network.classifier.parameters(), lr=hp['learning_rate'])
+        
     
     def save(self, path):
         with open(path, 'wb') as out:

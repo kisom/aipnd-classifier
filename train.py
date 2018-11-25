@@ -1,73 +1,53 @@
 #!/usr/bin/env python3
 
-import json
-import torch
-import torch.nn.functional as F
-
-from torch import nn
-from torch import optim
-from torchvision import datasets, models, transforms
-
-import network as net
+import argparse
+import copy
 import sys
+import torch
 
-data_dir = "flowers"
-train_dir = data_dir + "/train"
-valid_dir = data_dir + "/valid"
-test_dir = data_dir + "/test"
+import dataset
+import gym
+import model
 
-batch_size = 32
+def train_new_network(hp, data_dir, batch_size=32, print_every=50):
+    m = model.Model(hp)
+    d = dataset.Dataset(data_dir, batch_size)
+    g = gym.Gym(m, d, print_every)
 
-# Data preprocessing.
-#
-# The testing and validation sets use a standard crop→tensor flow, while
-# the training sets use augmented transforms that add additional randomness
-# into the training data. This is currently the same set recommended earlier
-# in the nanodegree.
-data_transforms = [
-    transforms.Resize(255),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
-]
-train_transforms = [
-    transforms.RandomRotation(30),
-    transforms.RandomResizedCrop(100),
-    transforms.RandomHorizontalFlip(),
-    transforms.Resize(255),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225]),
-]
+    g.train()
+    accuracy = g.check_accuracy(d.testing, 'testing')
+    if accuracy > 0.7:
+        m.save('checkpoint.dat')
 
-dataset_training = datasets.ImageFolder(train_dir, transforms.Compose(train_transforms))
-dataset_validation = datasets.ImageFolder(
-    valid_dir, transforms.Compose(data_transforms)
-)
-dataset_testing = datasets.ImageFolder(test_dir, transforms.Compose(data_transforms))
 
-dataloader_training = torch.utils.data.DataLoader(dataset_training, batch_size)
-dataloader_validation = torch.utils.data.DataLoader(dataset_validation, batch_size)
-dataloader_testing = torch.utils.data.DataLoader(dataset_testing, batch_size)
+def main(args):
+    default_hp = model.DEFAULT_HYPER_PARAMETERS
 
-with open("cat_to_name.json", "r") as f:
-    cat_to_name = json.load(f)
+    parser = argparse.ArgumentParser(description='Train a neural network.')
+    parser.add_argument('--arch', dest='arch', action='store',
+                    default=default_hp['architecture'],
+                    help='select a vision model')
+    parser.add_argument('--print-every', dest='print_every', action='store',
+                        default=50, help='number of steps to print updates',
+                        type=int)
+    parser.add_argument('--batch-size', dest='batch_size', action='store',
+                        default=16, help='training batch size', type=int)
+    parser.add_argument('--epochs', dest='epochs', action='store',
+                        default=3, help='number of training epochs', type=int)
+    parser.add_argument('--data-dir', dest='data_dir', action='store',
+                        default='flowers', help='training batch size')
+    parser.add_argument('--learning-rate', dest='learning_rate', 
+                        action='store', default=0.01, help='training batch size',
+                        type=float)
+    args = parser.parse_args(args)
+    
+    hp = copy.copy(default_hp)
+    hp['architecture'] = args.arch
+    hp['epochs'] = args.epochs
+    hp['learning_rate'] = args.learning_rate
 
-device = 'cpu'
-if torch.cuda.is_available():
-    print('GPU online.')
-    device = 'cuda'
+    train_new_network(hp, args.data_dir, args.batch_size, args.print_every)
 
-model = None
-
-if len(sys.argv) > 1:
-    model = net.model_checkpoint_load(sys.argv[1])
-else:
-    hyper_params = net.default_hyper_parameters(len(cat_to_name))
-    model = net.load_model(hyper_params)
-    net.do_deep_learning(model, dataloader_training, dataloader_validation, 50)
-
-if net.check_accuracy(model, dataloader_testing, device, 'testing') > 0.7:
-    net.model_checkpoint_write(model, 'checkpoint.dat')
+if __name__ == '__main__':
+    assert(torch.cuda.is_available())
+    main(sys.argv[1:])
