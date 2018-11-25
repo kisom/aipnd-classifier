@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 import torch
 
 class Gym():
@@ -58,6 +59,8 @@ class Gym():
             accuracy = self.check_accuracy(self.dataset.validation, 'validation')
             if accuracy < last_accuracy:
                 print('WARNING: accuracy has decreased')
+            elif np.isclose(accuracy, last_accuracy, rtol=0.001):
+                print('WARNING: accuracy has not increased')
             last_accuracy = accuracy
             print("epoch completed in: {}".format(datetime.datetime.now() - epoch_started))
             print("-" * 72)
@@ -68,7 +71,7 @@ class Gym():
         self.model.network.eval()
         correct = 0
         total = 0
-        
+
         with torch.no_grad():
             for data in dataset:
                 inputs, labels = data
