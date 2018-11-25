@@ -29,11 +29,11 @@ def _build_classifier(hp):
     return nn.Sequential(*classifier)
 
 DEFAULT_HYPER_PARAMETERS = {
-    'architecture': 'vgg19_bn',
-    'criterion': 'NLLLoss',
+    'architecture': 'vgg16_bn',
+    'criterion': 'NLLLoss', # Note that the classifier uses LogSoftmax for its final layer.
     'dropout': 0.5,
     'epochs': 6,
-    'layers': [1024, 256],
+    'layers': [4096, 4096],
     'learning_rate': 0.001,
     'nfeatures': 102,
     'ninputs': 32,
