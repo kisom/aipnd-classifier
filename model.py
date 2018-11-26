@@ -119,6 +119,20 @@ class Model:
             )
 
         self.criterion = getattr(nn, hp["criterion"])()
+        layer_list = [hp["ninputs"]]
+        layer_list.extend(hp["layers"])
+        layer_list.append(hp["nfeatures"])
+        classifier_layers = "x".join([str(x) for x in layer_list])
+        self._meta = {
+            "architecture": hp["architecture"],
+            "layers": classifier_layers,
+            "criterion": hp["criterion"],
+            "optimizer": hp["optimizer"],
+            "learning_rate": hp["learning_rate"],
+        }
+
+    def __repr__(self):
+        return str(self._meta)
 
     def save(self, path):
         """

@@ -33,6 +33,7 @@ class Dataset:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
         self.batchsize = batchsize
+        self.datadir = data_dir
 
         train_dir = os.path.join(data_dir, "train")
         valid_dir = os.path.join(data_dir, "valid")
@@ -56,6 +57,9 @@ class Dataset:
         self.testing = torch.utils.data.DataLoader(
             dataset_testing, batchsize, shuffle=True
         )
+
+    def __repr__(self):
+        return "dataset(data_dir={}, batchsize={})".format(self.datadir, self.batchsize)
 
     def training_set(self):
         "Returns the training dataset."

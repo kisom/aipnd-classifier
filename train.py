@@ -8,11 +8,16 @@ import torch
 import dataset
 import gym
 import model
+import util
+
+log = util.get_logger()
 
 
 def train_new_network(hp, data_dir, batch_size=32, print_every=50):
     m = model.Model(hp)
+    log.info("instantiated model: {}".format(m))
     d = dataset.Dataset(data_dir, batch_size)
+    log.info("loaded dataset: {}".format(d))
     g = gym.Gym(m, d, print_every)
 
     g.train()
