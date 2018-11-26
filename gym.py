@@ -2,9 +2,9 @@
 gym.py defines a training arena, called a gym, for training models.
 """
 import datetime
-import log
 import numpy as np
 import torch
+import util
 
 log = util.get_logger()
 
@@ -79,9 +79,9 @@ class Gym:
 
             accuracy = self._check_accuracy(self.dataset.validation, "validation")
             if accuracy < last_accuracy:
-                log.warning("accuracy has decreased")
+                log.warn("accuracy has decreased")
             elif np.isclose(accuracy, last_accuracy, rtol=0.001):
-                log.warning("WARNING: accuracy has not increased")
+                log.warn("accuracy has not increased")
             last_accuracy = accuracy
             log.info(
                 "epoch completed in: {}".format(datetime.datetime.now() - epoch_started)

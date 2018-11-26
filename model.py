@@ -3,7 +3,6 @@ model.py contains code for building models from torchvision models, and defines
 a class that acts as a container.
 """
 
-import log
 import pickle
 import util
 
