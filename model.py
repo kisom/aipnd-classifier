@@ -4,11 +4,12 @@ a class that acts as a container.
 """
 
 import pickle
-import util
 
 from torch import nn
 from torch import optim
 from torchvision import models
+
+import util
 
 # Resources:
 #   + https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch
@@ -140,6 +141,11 @@ class Model:
         return str(self._meta)
 
     def checkpoint(self, optimizer=False):
+        """
+        checkpoint generates a checkpoint for a model; this checkpoint can be
+        used to later restore the model. If optimizer is True, the state of the
+        optimizer is stored as well.
+        """
         checkpoint = {
             "state": self.network.to("cpu").state_dict(),
             "hp": self.hyper_params,

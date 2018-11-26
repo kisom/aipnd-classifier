@@ -2,8 +2,10 @@
 gym.py defines a training arena, called a gym, for training models.
 """
 import datetime
+
 import numpy as np
 import torch
+
 import util
 
 log = util.get_logger()
@@ -100,7 +102,7 @@ class Gym:
             )
             print("-" * 72)
 
-            if max_stalls >= 0 and stalls >= max_stalls:
+            if stalls >= max_stalls >= 0:
                 log.error("training has stalled, stopping")
                 break
         log.info(
@@ -127,7 +129,11 @@ class Gym:
                 inputs, labels = data
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = self.model.network.forward(inputs)
+
+                # max is dynamically generated, so pylint thinks it's not there.
+                # pylint: disable=E1101
                 _, predicted = torch.max(outputs.data, 1)
+                # pylint: enable=E1101
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
