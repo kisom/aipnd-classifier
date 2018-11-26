@@ -47,9 +47,15 @@ class Dataset:
             test_dir, transforms.Compose(test_transforms)
         )
 
-        self.training = torch.utils.data.DataLoader(dataset_training, batchsize * 2)
-        self.validation = torch.utils.data.DataLoader(dataset_validation, batchsize)
-        self.testing = torch.utils.data.DataLoader(dataset_testing, batchsize)
+        self.training = torch.utils.data.DataLoader(
+            dataset_training, batchsize * 2, shuffle=True
+        )
+        self.validation = torch.utils.data.DataLoader(
+            dataset_validation, batchsize, shuffle=True
+        )
+        self.testing = torch.utils.data.DataLoader(
+            dataset_testing, batchsize, shuffle=True
+        )
 
     def training_set(self):
         "Returns the training dataset."
