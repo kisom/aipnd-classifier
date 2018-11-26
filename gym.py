@@ -69,9 +69,13 @@ class Gym:
 
                 if steps % print_every == 0:
                     log.info(
-                        "{} {:6}|".format(datetime.datetime.now() - tdelta, steps),
-                        "epoch: {}/{}... ".format(epoch + 1, epochs),
-                        "loss: {:.4f}".format(running_loss / print_every),
+                        "{} {:6}|epoch: {}/{}; loss: {:.4f}".format(
+                            datetime.datetime.now() - tdelta,
+                            steps,
+                            epoch + 1,
+                            epochs,
+                            running_loss / print_every,
+                        )
                     )
 
                     tdelta = datetime.datetime.now()
