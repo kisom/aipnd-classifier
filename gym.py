@@ -34,11 +34,12 @@ class Gym:
         self.dataset = dataset
         self.print_every = print_every
 
-    def train(self):
+    def train(self, max_stalls=3):
         """
         train runs the model through backprop for a number of epochs. The number
         of epochs is controlled with the model's hyperparameters. After each epoch,
-        a validation run is done.
+        a validation run is done. max_stalls controls how many epochs training can
+        be stalled (no improvement in the accuracy) before the training is cutoff.
         """
 
         log.info("starting deep learning via {}".format(self.device))
@@ -51,6 +52,8 @@ class Gym:
 
         self.model.network.to(self.device)
         last_accuracy = 0
+        best_accuracy = 0
+        stalls = 0
 
         for epoch in range(epochs):
             self.model.train()
@@ -84,14 +87,21 @@ class Gym:
             accuracy = self._check_accuracy(self.dataset.validation, "validation")
             if accuracy < last_accuracy:
                 log.warn("accuracy has decreased")
+                stalls += 1
             elif np.isclose(accuracy, last_accuracy, rtol=0.001):
                 log.warn("accuracy has not increased")
+                stalls += 1
+            elif best_accuracy < accuracy:
+                stalls = 0
+                best_accuracy = accuracy
             last_accuracy = accuracy
             log.info(
                 "epoch completed in: {}".format(datetime.datetime.now() - epoch_started)
             )
             print("-" * 72)
 
+            if stalls >= max_stalls:
+                log.error('training has stalled, stopping')
         log.info(
             "training completed in {}".format(
                 datetime.datetime.now() - training_started
