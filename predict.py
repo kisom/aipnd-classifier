@@ -25,12 +25,13 @@
 # dimensions using ndarray.transpose. The color channel needs to be first and
 # retain the order of the other two dimensions.
 def process_image(image):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
+    """ Scales, crops, and normalizes a PIL image for a PyTorch model,
         returns an Numpy array
-    '''
-    
+    """
+
     # TODO: Process a PIL image for use in a PyTorch model
     pass
+
 
 # To check your work, the function below converts a PyTorch tensor and displays
 # it in the notebook. If your `process_image` function works, running the output
@@ -40,22 +41,23 @@ def imshow(image, ax=None, title=None):
     """Imshow for Tensor."""
     if ax is None:
         fig, ax = plt.subplots()
-    
+
     # PyTorch tensors assume the color channel is the first dimension
     # but matplotlib assumes is the third dimension
     image = image.numpy().transpose((1, 2, 0))
-    
+
     # Undo preprocessing
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
     image = std * image + mean
-    
+
     # Image needs to be clipped between 0 and 1 or it looks like noise when displayed
     image = np.clip(image, 0, 1)
-    
+
     ax.imshow(image)
-    
+
     return ax
+
 
 # Class Prediction
 
@@ -81,9 +83,8 @@ def imshow(image, ax=None, title=None):
 # > [ 0.01558163  0.01541934  0.01452626  0.01443549  0.01407339]
 # > ['70', '3', '45', '62', '55']
 def predict(image_path, model, topk=5):
-    ''' Predict the class (or classes) of an image using a trained deep learning model.
-    '''
-    
+    """ Predict the class (or classes) of an image using a trained deep learning model.
+    """
+
     # TODO: Implement the code to predict the class from an image file
     pass
-

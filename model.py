@@ -99,7 +99,7 @@ class Model:
 
         self.hyper_params = hp
         if labels:
-            self.hyper_params['nfeatures'] = len(labels)
+            self.hyper_params["nfeatures"] = len(labels)
             self.labels = labels
         if class_to_idx:
             self.class_to_idx = class_to_idx
@@ -136,27 +136,24 @@ class Model:
             "learning_rate": hp["learning_rate"],
         }
 
-        if labels:
-
-
     def __repr__(self):
         return str(self._meta)
 
     def checkpoint(self, optimizer=False):
         checkpoint = {
-            'state': self.network.to('cpu').state_dict(),
-            'hp': self.hyper_params,
+            "state": self.network.to("cpu").state_dict(),
+            "hp": self.hyper_params,
         }
 
         if optimizer:
-            checkpoint['optim'] = self.optimizer.state_dict()
+            checkpoint["optim"] = self.optimizer.state_dict()
 
         if self.labels:
-            checkpoint['labels'] = self.labels
-        
+            checkpoint["labels"] = self.labels
+
         if self.class_to_idx:
-            checkpoint['class_to_idx'] = self.class_to_idx
-        
+            checkpoint["class_to_idx"] = self.class_to_idx
+
         return checkpoint
 
     def save(self, path):
@@ -174,15 +171,17 @@ class Model:
         load restores a checkpointed Model from disk.
         """
 
-        with open(path, 'rb') as input_file:
+        with open(path, "rb") as input_file:
             state_data = pickle.load(input_file)
-        model = Model(state_data['hp'], state_data['labels'], state_data['class_to_idx'])
-        model.network.load_state_dict(state_data['state'])
+        model = Model(
+            state_data["hp"], state_data["labels"], state_data["class_to_idx"]
+        )
+        model.network.load_state_dict(state_data["state"])
 
-        if state_data['optim']:
-            model.optimizer.load_state_dict(state_data['optim'])
+        if state_data["optim"]:
+            model.optimizer.load_state_dict(state_data["optim"])
         return model
-    
+
     def train(self):
         """"
         train places the model in training mode.

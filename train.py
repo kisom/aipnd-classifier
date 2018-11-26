@@ -27,9 +27,10 @@ def train_new_network(hp, data_dir, batch_size=32, print_every=50):
         m.save("checkpoint.dat")
     return accuracy
 
+
 def train_from_checkpoint(path, epochs, data_dir, batch_size, print_every):
     m = model.Model.load(path)
-    m.hyper_params['epochs'] = epochs
+    m.hyper_params["epochs"] = epochs
     log.info("restored model: {}".format(m))
     d = dataset.Dataset(data_dir, batch_size)
     log.info("loaded dataset: {}".format(d))
@@ -41,8 +42,13 @@ def train_from_checkpoint(path, epochs, data_dir, batch_size, print_every):
 
     if post_acc > pre_acc:
         improvement = (post_acc - pre_acc) / pre_acc
-        log.info('model improved with training by {:0.3}% (new accuracy {:0.4}'.format(improvement, post_acc))
-        m.save('checkpoint.dat') 
+        log.info(
+            "model improved with training by {:0.3}% (new accuracy {:0.4}".format(
+                improvement, post_acc
+            )
+        )
+        m.save("checkpoint.dat")
+
 
 def try_multiple_experiments(hp, experiment_file, data_dir, batch_size, print_every):
     hp_delta = None
@@ -57,7 +63,7 @@ def try_multiple_experiments(hp, experiment_file, data_dir, batch_size, print_ev
         if accuracy > 0.7:
             log.info("found a viable model")
         results[str(delta)] = accuracy
-    with open('results.txt', 'a') as results_out:
+    with open("results.txt", "a") as results_out:
         results_out.write(json.dumps(results))
 
 
@@ -141,7 +147,13 @@ def main(args):
             hp, args.experiments, args.data_dir, args.batch_size, args.print_every
         )
     elif args.checkpoint:
-        train_from_checkpoint(args.checkpoint, args.epochs, args.data_dir, args.batch_size, args.print_every)
+        train_from_checkpoint(
+            args.checkpoint,
+            args.epochs,
+            args.data_dir,
+            args.batch_size,
+            args.print_every,
+        )
     else:
         train_new_network(hp, args.data_dir, args.batch_size, args.print_every)
 
