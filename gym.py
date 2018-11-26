@@ -101,7 +101,7 @@ class Gym:
             print("-" * 72)
 
             if stalls >= max_stalls:
-                log.error('training has stalled, stopping')
+                log.error("training has stalled, stopping")
         log.info(
             "training completed in {}".format(
                 datetime.datetime.now() - training_started
