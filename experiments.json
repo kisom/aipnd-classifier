@@ -1,8 +1,30 @@
 [
-    {"learning_rate": 0.01},
-    {"learning_rate": 0.001},
-    {"learning_rate": 0.005},
-    {"layers": [2048, 1024]},
-    {"layers": [2048, 2048]},
-    {"layers": [1024, 2048, 512]}
+    {
+        "learning_rate": 0.01
+    },
+    {
+        "learning_rate": 0.001
+    },
+    {
+        "learning_rate": 0.005
+    },
+    {
+        "layers": [
+            2048,
+            1024
+        ]
+    },
+    {
+        "layers": [
+            2048,
+            2048
+        ]
+    },
+    {
+        "layers": [
+            1024,
+            2048,
+            512
+        ]
+    }
 ]
