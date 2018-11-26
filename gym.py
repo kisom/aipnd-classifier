@@ -100,8 +100,9 @@ class Gym:
             )
             print("-" * 72)
 
-            if stalls >= max_stalls:
+            if max_stalls >= 0 and stalls >= max_stalls:
                 log.error("training has stalled, stopping")
+                break
         log.info(
             "training completed in {}".format(
                 datetime.datetime.now() - training_started
@@ -117,6 +118,7 @@ class Gym:
 
         log.info("running {} evaluation".format(datalabel))
         self.model.eval()
+        self.model.network.to(self.device)
         correct = 0
         total = 0
 

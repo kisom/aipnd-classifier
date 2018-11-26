@@ -134,6 +134,17 @@ class Model:
     def __repr__(self):
         return str(self._meta)
 
+    def checkpoint(self, optimizer=False):
+        checkpoint = {
+            'state': self.network.to('cpu').state_dict(),
+            'hp': self.hyper_params,
+        }
+
+        if optimizer:
+            checkpoint['ostate'] = self.optimizer.state_dict()
+        
+        return checkpoint
+
     def save(self, path):
         """
         save writes the model to disk such that it can be restored later. This
@@ -141,7 +152,7 @@ class Model:
         """
 
         with open(path, "wb") as out:
-            out.write(pickle.dumps(self))
+            pickle.dump(self.checkpoint(), out)
 
     @classmethod
     def load(cls, path):
@@ -149,10 +160,12 @@ class Model:
         load restores a checkpointed Model from disk.
         """
 
-        with open(path, "rb") as input_file:
-            model = pickle.loads(input_file.read())
+        with open(path, 'rb') as input_file:
+            state_data = pickle.load(input_file)
+        model = Model(state_data['hp'])
+        model.network.load_state_dict(state_data['state'])
         return model
-
+    
     def train(self):
         """"
         train places the model in training mode.
