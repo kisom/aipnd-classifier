@@ -79,7 +79,7 @@ CLASSIFIER_MODELS = [
 class Model:
     """A Model is a container for a neural network."""
 
-    def __init__(self, hp):
+    def __init__(self, hp, labels=None, class_to_idx=None):
         """
         Initialise a new model. The hyperparameters should be
         a dictionary with the following keys:
@@ -98,6 +98,11 @@ class Model:
         """
 
         self.hyper_params = hp
+        if labels:
+            self.hyper_params['nfeatures'] = len(labels)
+            self.labels = labels
+        if class_to_idx:
+            self.class_to_idx = class_to_idx
 
         self.network = getattr(models, hp["architecture"])(pretrained=True)
         for param in self.network.parameters():
@@ -131,6 +136,9 @@ class Model:
             "learning_rate": hp["learning_rate"],
         }
 
+        if labels:
+
+
     def __repr__(self):
         return str(self._meta)
 
@@ -141,7 +149,13 @@ class Model:
         }
 
         if optimizer:
-            checkpoint['ostate'] = self.optimizer.state_dict()
+            checkpoint['optim'] = self.optimizer.state_dict()
+
+        if self.labels:
+            checkpoint['labels'] = self.labels
+        
+        if self.class_to_idx:
+            checkpoint['class_to_idx'] = self.class_to_idx
         
         return checkpoint
 
@@ -162,8 +176,11 @@ class Model:
 
         with open(path, 'rb') as input_file:
             state_data = pickle.load(input_file)
-        model = Model(state_data['hp'])
+        model = Model(state_data['hp'], state_data['labels'], state_data['class_to_idx'])
         model.network.load_state_dict(state_data['state'])
+
+        if state_data['optim']:
+            model.optimizer.load_state_dict(state_data['optim'])
         return model
     
     def train(self):

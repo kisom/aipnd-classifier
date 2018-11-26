@@ -48,6 +48,7 @@ class Dataset:
             test_dir, transforms.Compose(test_transforms)
         )
 
+        self.class_to_idx = dataset_training.class_to_idx
         self.training = torch.utils.data.DataLoader(
             dataset_training, batchsize * 2, shuffle=True
         )
