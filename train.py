@@ -2,6 +2,7 @@
 
 import argparse
 import copy
+import json
 import sys
 import torch
 
@@ -24,7 +25,19 @@ def train_new_network(hp, data_dir, batch_size=32, print_every=50):
     accuracy = g.evaluate()
     if accuracy > 0.7:
         m.save("checkpoint.dat")
+        return m
 
+def try_multiple_experiments(hp, experiment_file, data_dir, batch_size, print_every):
+    hp_delta = None
+    with open(experiment_file, 'rt') as experiments:
+        hp_delta = json.loads(experiments.read())
+    for delta in hp_delta:
+        log.info('running experiment: {}'.format(delta))
+        hp_mod = copy.copy(hp)
+        hp_mod.update(delta)
+        if train_new_network(hp_mod, data_dir, batch_size):
+            log.info("found a viable model")
+            return
 
 def main(args):
     default_hp = model.DEFAULT_HYPER_PARAMETERS
@@ -76,6 +89,18 @@ def main(args):
         help="training batch size",
         type=float,
     )
+    parser.add_argument(
+        "--experiments",
+        dest="experiments",
+        action="store",
+        help="run experiments defined in the named file",
+    )
+    parser.add_argument(
+        "--no-gpu",
+        dest="no_gpu",
+        action="store_true",
+        help="disable GPU requirement",
+    )
     args = parser.parse_args(args)
 
     hp = copy.copy(default_hp)
@@ -83,9 +108,14 @@ def main(args):
     hp["epochs"] = args.epochs
     hp["learning_rate"] = args.learning_rate
 
-    train_new_network(hp, args.data_dir, args.batch_size, args.print_every)
+    if not args.no_gpu:
+        assert torch.cuda.is_available()
+
+    if args.experiments:
+        try_multiple_experiments(hp, args.experiments, args.data_dir, args.batch_size, args.print_every)
+    else:
+        train_new_network(hp, args.data_dir, args.batch_size, args.print_every)
 
 
 if __name__ == "__main__":
-    assert torch.cuda.is_available()
     main(sys.argv[1:])
