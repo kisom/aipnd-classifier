@@ -2,9 +2,11 @@
 gym.py defines a training arena, called a gym, for training models.
 """
 import datetime
-import logging
+import log
 import numpy as np
 import torch
+
+log = util.get_logger()
 
 
 class Gym:
@@ -23,7 +25,7 @@ class Gym:
             print_every = dataset.batchsize
 
         if torch.cuda.is_available():
-            logging.info("GPU available")
+            log.info("GPU available")
             self.device = "cuda"
         else:
             self.device = "cpu"
@@ -39,7 +41,7 @@ class Gym:
         a validation run is done.
         """
 
-        logging.info("starting deep learning via {}".format(self.device))
+        log.info("starting deep learning via {}".format(self.device))
 
         # Only train the classifier parameters, feature parameters are frozen.
         epochs = self.model.hyper_params["epochs"]
@@ -53,7 +55,7 @@ class Gym:
         for epoch in range(epochs):
             self.model.train()
 
-            logging.info("starting epoch: {}".format(epoch))
+            log.info("starting epoch: {}".format(epoch))
             running_loss = 0
             epoch_started = datetime.datetime.now()
             tdelta = datetime.datetime.now()
@@ -66,7 +68,7 @@ class Gym:
                 running_loss += loss
 
                 if steps % print_every == 0:
-                    logging.info(
+                    log.info(
                         "{} {:6}|".format(datetime.datetime.now() - tdelta, steps),
                         "epoch: {}/{}... ".format(epoch + 1, epochs),
                         "loss: {:.4f}".format(running_loss / print_every),
@@ -77,16 +79,16 @@ class Gym:
 
             accuracy = self._check_accuracy(self.dataset.validation, "validation")
             if accuracy < last_accuracy:
-                logging.warning("accuracy has decreased")
+                log.warning("accuracy has decreased")
             elif np.isclose(accuracy, last_accuracy, rtol=0.001):
-                logging.warning("WARNING: accuracy has not increased")
+                log.warning("WARNING: accuracy has not increased")
             last_accuracy = accuracy
-            logging.info(
+            log.info(
                 "epoch completed in: {}".format(datetime.datetime.now() - epoch_started)
             )
             print("-" * 72)
 
-        logging.info(
+        log.info(
             "training completed in {}".format(
                 datetime.datetime.now() - training_started
             )
@@ -99,7 +101,7 @@ class Gym:
         for identifying whether this is an evaluation or validation check.
         """
 
-        logging.info("running {} evaluation".format(datalabel))
+        log.info("running {} evaluation".format(datalabel))
         self.model.eval()
         correct = 0
         total = 0
@@ -113,7 +115,7 @@ class Gym:
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
-        logging.info(
+        log.info(
             "{} accuracy over {} test images: {:0.4}% ({}/{})".format(
                 datalabel, total, (100 * correct / total), correct, total
             )

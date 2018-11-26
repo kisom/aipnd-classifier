@@ -3,8 +3,9 @@ model.py contains code for building models from torchvision models, and defines
 a class that acts as a container.
 """
 
-import logging
+import log
 import pickle
+import util
 
 from torch import nn
 from torch import optim
@@ -12,6 +13,8 @@ from torchvision import models
 
 # Resources:
 #   + https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch
+
+log = util.get_logger()
 
 
 def _build_classifier(hp):
@@ -142,14 +145,14 @@ class Model:
         train places the model in training mode.
         """
         self.network.train()
-        logging.info("network is in training mode")
+        log.info("network is in training mode")
 
     def eval(self):
         """
         eval places the model in evaluation mode.
         """
         self.network.eval()
-        logging.info("network is in evaluation mode")
+        log.info("network is in evaluation mode")
 
     def forward(self, inputs):
         """
