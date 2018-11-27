@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+"""
+predict contains utilities for predicting answers from a network,
+e.g. running inference in the real world.
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL.Image as Image
+from PIL import Image
 from torchvision import transforms
 import torch
 
@@ -39,6 +43,12 @@ def process_image(path):
 
 
 def pipeline(image):
+    """
+    pipeline defines the image transformation pipeline, going
+    from PIL→torch tensor.
+    """
+
+    # Reuse the same transformations used when loading the datasets.
     return transforms.Compose(
         [
             transforms.Resize(256),
@@ -105,5 +115,11 @@ def predict(image_path, model, topk=5):
 
     model.eval()
     image = process_image(image_path)
-    outputs = model.forward(image.unsqueeze(0))
-    return torch.exp(outputs).topk(topk)
+    # pylint: disable=E1101
+    probs, indices = torch.exp(model.forward(image.unsqueeze(0))).topk(topk)
+    # pylint: enable=E1101
+    probs.squeeze_(0)
+    indices.squeeze_(0)
+    classes = [model.idx_to_class[i.item()] for i in indices]
+    probs = [prob.item() for prob in probs]
+    return probs, classes

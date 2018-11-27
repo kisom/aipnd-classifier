@@ -16,7 +16,7 @@ import util
 # Resources:
 #   + https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch
 
-# TODO:
+# Possible improvements:
 #   + version models (e.g. # of epochs of training)
 #   + checkpoint file version
 
@@ -193,9 +193,7 @@ class Model:
         if "class_to_idx" in state_data:
             class_to_idx = state_data["class_to_idx"]
 
-        model = Model(
-            state_data["hp"], state_data["labels"], state_data["class_to_idx"]
-        )
+        model = Model(state_data["hp"], labels, class_to_idx)
         model.network.load_state_dict(state_data["state"])
 
         if optim in state_data:
@@ -269,26 +267,31 @@ class Model:
         # The last layer is a log softmax, so we'll want to apply an exponential
         # to undo it and get the actual probability. After forwarding it, we get
         # the topk probabilities.
+        # pylint: disable=E1101
         outputs, indices = torch.exp(self.forward(input_image)).topk(topk)
+        # pylint: enable=E1101
 
         # The outputs and indicies are in a 2D tensor, but the first dimension
         # is of length 1 and isn't necessary. E.g. the answer we get back is
         # [[p0, p1, p2, ..., pk]] and squeeze removes that outer set of braces.
-        outputs, indices = outputs.squeeze(0), indices.squeeze(0)
+        outputs.squeeze_(0)
+        indices.squeeze_(0)
 
         # If we have labels and a mapping from class to index, we can do cool
         # things.
         if self.labels and self.class_to_idx:
             predictions = OrderedDict()
 
-            for i in range(len(outputs)):
-                predictions[self.labels[self.idx_to_class[indices[i].item()]]] = (
-                    outputs[i].item() * 100
-                )
+            for i in enumerate(outputs):
+                klass = self.idx_to_class[indices[i].item()]
+                name = self.labels[klass]
+                predictions[name] = outputs[i].item() * 100
             return predictions
-        else:
-            return outputs, indices
+        return outputs, indices
 
 
 def load(path):
+    """
+    Given a path to a checkpoint, load will attempt to restore a model.
+    """
     return Model.load(path)
