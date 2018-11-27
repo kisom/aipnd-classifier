@@ -139,9 +139,13 @@ class Gym:
                 correct += (predicted == labels).sum().item()
 
         log.info(
-                "{}: {} accuracy over {} test images: {:0.4}% ({}/{})".format(
-                datetime.datetime.now() - started, datalabel, total,
-                (100 * correct / total), correct, total
+            "{}: {} accuracy over {} test images: {:0.4}% ({}/{})".format(
+                datetime.datetime.now() - started,
+                datalabel,
+                total,
+                (100 * correct / total),
+                correct,
+                total,
             )
         )
 

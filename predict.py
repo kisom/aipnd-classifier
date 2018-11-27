@@ -2,6 +2,7 @@
 
 import numpy as np
 import PIL.Image as Image
+from torchvision import transforms
 
 # Image Preprocessing
 
@@ -37,8 +38,12 @@ def process_image(image):
     cropy = min(height, 224)
 
     # note: PIL seems to handle float sizes okay.
-    box = ((width/2)-(cropx/2), ((height/2)-(cropy/2)), 
-           (width/2)+(cropx/2), ((height/2)+(cropy/2)))
+    box = (
+        (width / 2) - (cropx / 2),
+        ((height / 2) - (cropy / 2)),
+        (width / 2) + (cropx / 2),
+        ((height / 2) + (cropy / 2)),
+    )
     image = image.crop(box)
 
     np_image = np.array(image)
@@ -48,14 +53,16 @@ def process_image(image):
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
 
-    np_image = np_image - mean 
+    np_image = np_image - mean
     np_image = np_image / std
     np_image = np_image.reshape(x, y, z)
 
-    return np_image
+    return np_image.transpose((2, 0, 1))
 
-def test_process_image(image_path='test_image.jpg'):
+
+def test_process_image(image_path="test_image.jpg"):
     return process_image(Image.open(image_path))
+
 
 # To check your work, the function below converts a PyTorch tensor and displays
 # it in the notebook. If your `process_image` function works, running the output

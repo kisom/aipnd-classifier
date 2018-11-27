@@ -14,6 +14,10 @@ import util
 # Resources:
 #   + https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch
 
+# TODO:
+#   + version models (e.g. # of epochs of training)
+#   + checkpoint file version
+
 log = util.get_logger()
 
 
@@ -235,6 +239,6 @@ class Model:
         self.optimizer.step()
         return (outputs, loss.item())
 
+
 def load(path):
     return Model.load(path)
-
