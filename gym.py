@@ -86,7 +86,7 @@ class Gym:
                     tdelta = datetime.datetime.now()
                     running_loss = 0
 
-            accuracy = self._check_accuracy(self.dataset.validation, "validation")
+            accuracy, _ = self._check_accuracy(self.dataset.validation, "validation")
             if accuracy < last_accuracy:
                 log.warn("accuracy has decreased")
                 stalls += 1
@@ -123,6 +123,7 @@ class Gym:
         self.model.network.to(self.device)
         correct = 0
         total = 0
+        total_loss = 0
 
         started = datetime.datetime.now()
         with torch.no_grad():
@@ -130,7 +131,8 @@ class Gym:
                 inputs, labels = data
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = self.model.network.forward(inputs)
-
+                loss = self.model.criterion(outputs, labels)
+                total_loss += loss.item()
                 # max is dynamically generated, so pylint thinks it's not there.
                 # pylint: disable=E1101
                 _, predicted = torch.max(outputs.data, 1)
@@ -149,7 +151,7 @@ class Gym:
             )
         )
 
-        return correct / total
+        return correct / total, validation_loss / total
 
     def evaluate(self):
         """

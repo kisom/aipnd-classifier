@@ -86,7 +86,7 @@ CLASSIFIER_MODELS = [
 class Model:
     """A Model is a container for a neural network."""
 
-    def __init__(self, hp, labels=None, class_to_idx=None):
+    def __init__(self, hp, labels, class_to_idx):
         """
         Initialise a new model. The hyperparameters should be
         a dictionary with the following keys:
