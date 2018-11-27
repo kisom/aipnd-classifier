@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import matplotlib.pyplot as plt
 import numpy as np
 import PIL.Image as Image
 from torchvision import transforms
+import torch
 
 # Image Preprocessing
 
@@ -28,50 +30,33 @@ from torchvision import transforms
 # it's the third dimension in the PIL image and Numpy array. You can reorder
 # dimensions using ndarray.transpose. The color channel needs to be first and
 # retain the order of the other two dimensions.FB
-def process_image(image):
-    """ Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
+def process_image(path):
     """
-    image.thumbnail((256, 256))
-    width, height = image.size
-    cropx = min(width, 224)
-    cropy = min(height, 224)
-
-    # note: PIL seems to handle float sizes okay.
-    box = (
-        (width / 2) - (cropx / 2),
-        ((height / 2) - (cropy / 2)),
-        (width / 2) + (cropx / 2),
-        ((height / 2) + (cropy / 2)),
-    )
-    image = image.crop(box)
-
-    np_image = np.array(image)
-    (x, y, z) = np_image.shape
-    np_image = np_image.reshape(x * y, z)
-
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-
-    np_image = np_image - mean
-    np_image = np_image / std
-    np_image = np_image.reshape(x, y, z)
-
-    return np_image.transpose((2, 0, 1))
+    Scales, crops, and normalizes a PIL image for a PyTorch model,
+    returns an Numpy array
+    """
+    return pipeline(Image.open(path))
 
 
-def test_process_image(image_path="test_image.jpg"):
-    return process_image(Image.open(image_path))
+def pipeline(image):
+    return transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )(image)
 
 
 # To check your work, the function below converts a PyTorch tensor and displays
 # it in the notebook. If your `process_image` function works, running the output
 # through this function should return the original image (except for the cropped
 # out portions).
-def imshow(image, ax=None, title=None):
+def imshow(image, ax=None):
     """Imshow for Tensor."""
     if ax is None:
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
     # PyTorch tensors assume the color channel is the first dimension
     # but matplotlib assumes is the third dimension
@@ -114,8 +99,11 @@ def imshow(image, ax=None, title=None):
 # > [ 0.01558163  0.01541934  0.01452626  0.01443549  0.01407339]
 # > ['70', '3', '45', '62', '55']
 def predict(image_path, model, topk=5):
-    """ Predict the class (or classes) of an image using a trained deep learning model.
+    """
+    Predict the class (or classes) of an image using a trained deep learning model.
     """
 
-    # TODO: Implement the code to predict the class from an image file
-    pass
+    model.eval()
+    image = process_image(image_path)
+    outputs = model.forward(image.unsqueeze(0))
+    return torch.exp(outputs).topk(topk)

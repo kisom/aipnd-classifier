@@ -3,11 +3,13 @@ model.py contains code for building models from torchvision models, and defines
 a class that acts as a container.
 """
 
+from collections import OrderedDict
 import pickle
 
+import torch
 from torch import nn
 from torch import optim
-from torchvision import models
+from torchvision import models, transforms
 
 import util
 
@@ -108,6 +110,9 @@ class Model:
             self.labels = labels
         if class_to_idx:
             self.class_to_idx = class_to_idx
+            self.idx_to_class = {}
+            for key, value in self.class_to_idx.items():
+                self.idx_to_class[value] = key
 
         self.network = getattr(models, hp["architecture"])(pretrained=True)
         for param in self.network.parameters():
@@ -238,6 +243,51 @@ class Model:
         loss.backward()
         self.optimizer.step()
         return (outputs, loss.item())
+
+    def recognize(self, image, topk=5):
+        """
+        recognise takes a PIL image of a flower and returns the topk predictions
+        for what the network thinks that flower is.
+        """
+
+        self.eval()
+
+        # Reuse the same image processing pipeline we used in the datasets.
+        input_image = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )(image)
+        # The unsqueeze makes this a 4D tensor, which acts as a list of of 3D tensors.
+        input_image.unsqueeze_(0)
+
+        # The last layer is a log softmax, so we'll want to apply an exponential
+        # to undo it and get the actual probability. After forwarding it, we get
+        # the topk probabilities.
+        outputs, indices = torch.exp(self.forward(input_image)).topk(topk)
+
+        # The outputs and indicies are in a 2D tensor, but the first dimension
+        # is of length 1 and isn't necessary. E.g. the answer we get back is
+        # [[p0, p1, p2, ..., pk]] and squeeze removes that outer set of braces.
+        outputs, indices = outputs.squeeze(0), indices.squeeze(0)
+
+        # If we have labels and a mapping from class to index, we can do cool
+        # things.
+        if self.labels and self.class_to_idx:
+            predictions = OrderedDict()
+
+            for i in range(len(outputs)):
+                predictions[self.labels[self.idx_to_class[indices[i].item()]]] = (
+                    outputs[i].item() * 100
+                )
+            return predictions
+        else:
+            return outputs, indices
 
 
 def load(path):
