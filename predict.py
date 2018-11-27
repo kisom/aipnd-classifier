@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import numpy as np
+import PIL.Image as Image
+
 # Image Preprocessing
 
 # You'll want to use PIL to load the image (documentation). It's best to write a
@@ -23,15 +26,36 @@
 # And finally, PyTorch expects the color channel to be the first dimension but
 # it's the third dimension in the PIL image and Numpy array. You can reorder
 # dimensions using ndarray.transpose. The color channel needs to be first and
-# retain the order of the other two dimensions.
+# retain the order of the other two dimensions.FB
 def process_image(image):
     """ Scales, crops, and normalizes a PIL image for a PyTorch model,
         returns an Numpy array
     """
+    image.thumbnail((256, 256))
+    width, height = image.size
+    cropx = min(width, 224)
+    cropy = min(height, 224)
 
-    # TODO: Process a PIL image for use in a PyTorch model
-    pass
+    # note: PIL seems to handle float sizes okay.
+    box = ((width/2)-(cropx/2), ((height/2)-(cropy/2)), 
+           (width/2)+(cropx/2), ((height/2)+(cropy/2)))
+    image = image.crop(box)
 
+    np_image = np.array(image)
+    (x, y, z) = np_image.shape
+    np_image = np_image.reshape(x * y, z)
+
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+
+    np_image = np_image - mean 
+    np_image = np_image / std
+    np_image = np_image.reshape(x, y, z)
+
+    return np_image
+
+def test_process_image(image_path='test_image.jpg'):
+    return process_image(Image.open(image_path))
 
 # To check your work, the function below converts a PyTorch tensor and displays
 # it in the notebook. If your `process_image` function works, running the output

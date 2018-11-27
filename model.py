@@ -172,6 +172,28 @@ class Model:
             pickle.dump(self.checkpoint(), out)
 
     @classmethod
+    def restore(cls, state_data):
+        """
+        restore takes a checkpoint and restores it.
+        """
+        labels = None
+        if "labels" in state_data:
+            labels = state_data["labels"]
+
+        class_to_idx = None
+        if "class_to_idx" in state_data:
+            class_to_idx = state_data["class_to_idx"]
+
+        model = Model(
+            state_data["hp"], state_data["labels"], state_data["class_to_idx"]
+        )
+        model.network.load_state_dict(state_data["state"])
+
+        if optim in state_data:
+            model.optimizer.load_state_dict(state_data["optim"])
+        return model
+
+    @classmethod
     def load(cls, path):
         """
         load restores a checkpointed Model from disk.
@@ -179,14 +201,7 @@ class Model:
 
         with open(path, "rb") as input_file:
             state_data = pickle.load(input_file)
-        model = Model(
-            state_data["hp"], state_data["labels"], state_data["class_to_idx"]
-        )
-        model.network.load_state_dict(state_data["state"])
-
-        if state_data["optim"]:
-            model.optimizer.load_state_dict(state_data["optim"])
-        return model
+        return Model.restore(state_data)
 
     def train(self):
         """"
@@ -219,3 +234,7 @@ class Model:
         loss.backward()
         self.optimizer.step()
         return (outputs, loss.item())
+
+def load(path):
+    return Model.load(path)
+
