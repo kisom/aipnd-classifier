@@ -23,7 +23,7 @@ def train_new_network(hp, data_dir, batch_size=32, print_every=50):
     g = gym.Gym(m, d, print_every)
 
     g.train()
-    accuracy = g.evaluate()
+    accuracy, _ = g.evaluate()
     if accuracy > 0.7:
         m.save("checkpoint.dat")
     return accuracy

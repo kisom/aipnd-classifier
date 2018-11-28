@@ -88,11 +88,11 @@ class Gym:
 
             accuracy, _ = self._check_accuracy(self.dataset.validation, "validation")
             if accuracy < last_accuracy:
-                log.warn("accuracy has decreased")
                 stalls += 1
+                log.warn("accuracy has decreased (stalls={})".format(stalls))
             elif np.isclose(accuracy, last_accuracy, rtol=0.001):
-                log.warn("accuracy has not increased")
                 stalls += 1
+                log.warn("accuracy has not increased (stalls={})".format(stalls))
             elif best_accuracy < accuracy:
                 stalls = 0
                 best_accuracy = accuracy
