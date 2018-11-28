@@ -141,17 +141,19 @@ class Gym:
                 correct += (predicted == labels).sum().item()
 
         log.info(
-            "{}: {} accuracy over {} test images: {:0.4}% ({}/{})".format(
+            "{}: {} accuracy over {} test images: {:0.4}% ({}/{}) | average loss: {:0.4} total loss: {:0.4}".format(
                 datetime.datetime.now() - started,
                 datalabel,
                 total,
                 (100 * correct / total),
                 correct,
                 total,
+                total_loss / total,
+                total_loss
             )
         )
 
-        return correct / total, validation_loss / total
+        return correct / total, total_loss / total
 
     def evaluate(self):
         """
