@@ -1,0 +1,6 @@
+vgg.classifier[0].in_features
+densenet.classifier.in_features
+inception.fc.in_features
+alexnet.classifier[1].in_features
+resnet.fc.in_features
+squeezenet: unsupported
