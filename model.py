@@ -86,7 +86,7 @@ CLASSIFIER_MODELS = [
 class Model:
     """A Model is a container for a neural network."""
 
-    def __init__(self, hp, labels, class_to_idx):
+    def __init__(self, hp, class_to_idx):
         """
         Initialise a new model. The hyperparameters should be
         a dictionary with the following keys:
@@ -105,10 +105,8 @@ class Model:
         """
 
         self.hyper_params = hp
-        if labels:
-            self.hyper_params["nfeatures"] = len(labels)
-            self.labels = labels
         if class_to_idx:
+            self.hyper_params['nfeatures'] = len(class_to_idx)
             self.class_to_idx = class_to_idx
             self.idx_to_class = {}
             for key, value in self.class_to_idx.items():
@@ -123,12 +121,12 @@ class Model:
             hp["ninputs"] = MODEL_NINPUTS[hp["architecture"]]
 
         if hp["architecture"] in CLASSIFIER_MODELS:
-            self.network.classifier = _build_classifier(hp)
+            self.network.classifier = _build_classifier(self.hyper_params)
             self.optimizer = getattr(optim, hp["optimizer"])(
                 self.network.classifier.parameters(), lr=hp["learning_rate"]
             )
         else:
-            self.network.fc = _build_classifier(hp)
+            self.network.fc = _build_classifier(self.hyper_params)
             self.optimizer = getattr(optim, hp["optimizer"])(
                 self.network.fc.parameters(), lr=hp["learning_rate"]
             )

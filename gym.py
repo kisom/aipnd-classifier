@@ -36,18 +36,16 @@ class Gym:
         self.dataset = dataset
         self.print_every = print_every
 
-    def train(self, max_stalls=3):
+    def train(self, epochs=6, max_stalls=3):
         """
-        train runs the model through backprop for a number of epochs. The number
-        of epochs is controlled with the model's hyperparameters. After each epoch,
-        a validation run is done. max_stalls controls how many epochs training can
-        be stalled (no improvement in the accuracy) before the training is cutoff.
+        train runs the model through backprop for a number of epochs. After each
+        epoch, a validation run is done. max_stalls controls how many epochs
+        training can be stalled (no improvement in the accuracy) before the
+        training is cutoff.
         """
 
         log.info("starting deep learning via {}".format(self.device))
 
-        # Only train the classifier parameters, feature parameters are frozen.
-        epochs = self.model.hyper_params["epochs"]
         print_every = self.print_every
         steps = 0
         training_started = datetime.datetime.now()
