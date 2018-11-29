@@ -115,7 +115,7 @@ def main(args):
 
 
 def checkpoint_name(save_dir):
-    return os.path.join(save_dir, "checkpoint-{}".format(time.strftime("%s")))
+    return os.path.join(save_dir, "checkpoint-{}.dat".format(time.strftime("%s")))
 
 
 if __name__ == "__main__":
