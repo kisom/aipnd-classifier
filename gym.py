@@ -17,7 +17,7 @@ class Gym:
     is essential a container for a model and dataset.
     """
 
-    def __init__(self, model, dataset, print_every=None):
+    def __init__(self, model, dataset, print_every=None, device=None):
         """
         A gym is initialised with a model and dataset. If print_every isn't set,
         it's set to the dataset's batchsize.
@@ -26,11 +26,14 @@ class Gym:
         if not print_every:
             print_every = dataset.batchsize
 
-        if torch.cuda.is_available():
-            log.info("GPU available")
-            self.device = "cuda"
+        if device:
+            self.device = device
         else:
-            self.device = "cpu"
+            if torch.cuda.is_available():
+                log.info("GPU available")
+                self.device = "cuda"
+            else:
+                self.device = "cpu"
 
         self.model = model
         self.dataset = dataset
@@ -147,7 +150,7 @@ class Gym:
                 correct,
                 total,
                 total_loss / total,
-                total_loss
+                total_loss,
             )
         )
 

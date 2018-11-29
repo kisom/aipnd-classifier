@@ -6,6 +6,7 @@ a class that acts as a container.
 from collections import OrderedDict
 import pickle
 
+from PIL import Image
 import torch
 from torch import nn
 from torch import optim
@@ -22,65 +23,14 @@ import util
 
 log = util.get_logger()
 
-
-def _build_classifier(hp):
-    classifier = []
-    layers = hp["layers"]
-
-    layer0 = [
-        nn.Linear(hp["ninputs"], layers[0]),
-        nn.ReLU(),
-        nn.Dropout(p=hp["dropout"]),
-    ]
-    classifier.extend(layer0)
-
-    for i in range(1, len(layers)):
-        layer = [nn.Linear(layers[i - 1], layers[i], bias=True), nn.ReLU()]
-        classifier.extend(layer)
-
-    classifier.extend(
-        [nn.Linear(layers[-1], hp["nfeatures"], bias=True), nn.LogSoftmax(dim=1)]
-    )
-    return nn.Sequential(*classifier)
-
-
 DEFAULT_HYPER_PARAMETERS = {
     "architecture": "vgg16_bn",
     "criterion": "NLLLoss",  # Note that the classifier uses LogSoftmax for its final layer.
     "dropout": 0.5,
-    "epochs": 6,
     "layers": [4096, 4096],
     "learning_rate": 0.001,
-    "nfeatures": 102,
-    "ninputs": 32,
     "optimizer": "Adam",
 }
-
-MODEL_NINPUTS = {
-    "alexnet": 9216,
-    "densenet121": 1024,
-    "squeezenet": 106496,
-    "vgg11_bn": 25088,
-    "vgg13_bn": 25088,
-    "vgg16_bn": 25088,
-    "vgg19_bn": 25088,
-    "vgg11": 25088,
-    "vgg13": 25088,
-    "vgg16": 25088,
-    "vgg19": 25088,
-}
-
-CLASSIFIER_MODELS = [
-    "densenet121",
-    "vgg11_bn",
-    "vgg13_bn",
-    "vgg16_bn",
-    "vgg19_bn",
-    "vgg11",
-    "vgg13",
-    "vgg16",
-    "vgg19",
-]
 
 
 class Model:
@@ -93,11 +43,8 @@ class Model:
             "architecture": a string containing the name of a torchvision model
             "criterion": a string containing the criterion function name
             "dropout": a float containing the dropout rate, expressed between 0 and 1
-            "epochs": an integer containing the number of training epochs
             "layers": a list of integers, containing the sizes of the hidden layers
             "learning_rate": a float containing the learning rate for the optimizer
-            "nfeatures": an integer that is the number of features
-            "ninputs": an integer that is the number of inputs to the hidden layers
             "optimizer": a string containing the optimizer function
 
         Note that the final hidden layer will have a LogSoftmax put on it, which may
@@ -105,47 +52,70 @@ class Model:
         """
 
         self.hyper_params = hp
-        if class_to_idx:
-            self.hyper_params['nfeatures'] = len(class_to_idx)
-            self.class_to_idx = class_to_idx
-            self.idx_to_class = {}
-            for key, value in self.class_to_idx.items():
-                self.idx_to_class[value] = key
+        self.class_to_idx = class_to_idx
+        self.idx_to_class = {}
+        for key, value in self.class_to_idx.items():
+            self.idx_to_class[value] = key
 
-        self.network = getattr(models, hp["architecture"])(pretrained=True)
+        params = self._setup_network(
+            hp["architecture"], hp["layers"], len(class_to_idx), hp["dropout"]
+        )
+        self.criterion = getattr(nn, hp["criterion"])()
+        self.optimizer = getattr(optim, hp["optimizer"])(params, lr=hp["learning_rate"])
+
+    def _freeze_model(self):
         for param in self.network.parameters():
             if param.requires_grad:
                 param.requires_grad = False
 
-        if hp["architecture"] in MODEL_NINPUTS:
-            hp["ninputs"] = MODEL_NINPUTS[hp["architecture"]]
+    def _setup_network(self, arch, layers, noutputs, dropout):
+        """
+        Given an architecture, layer description, and dropout rate, set up a
+        pretrained model and return the parameters to pass to the optimiser.
+        """
+        if arch == "vgg":
+            arch = "vgg16_bn"
+        elif arch == "densenet":
+            arch = "densenet121"
+        elif arch == "resnet":
+            arch = "resnet152"
 
-        if hp["architecture"] in CLASSIFIER_MODELS:
-            self.network.classifier = _build_classifier(self.hyper_params)
-            self.optimizer = getattr(optim, hp["optimizer"])(
-                self.network.classifier.parameters(), lr=hp["learning_rate"]
+        self.network = getattr(models, arch)(pretrained=True)
+        params = None  # optimizer params
+        if arch.startswith("vgg"):
+            self._freeze_model()
+            self.network.classifier = _build_classifier(
+                layers, self.network.classifier[0].in_features, noutputs, dropout
             )
+            params = self.network.classifier.parameters()
+        elif arch.startswith("densenet"):
+            self._freeze_model()
+            self.network.classifier = _build_classifier(
+                layers, self.network.classifier.in_features, noutputs, dropout
+            )
+            params = self.network.classifier.parameters()
+        elif arch.startswith("inception"):
+            self._freeze_model()
+            self.network.fc = _build_classifier(
+                layers, self.network.fc.in_features, noutputs, dropout
+            )
+            params = self.network.fc.parameters()
+        elif arch == "alexnet":
+            self._freeze_model()
+            self.network.classifier = _build_classifier(
+                layers, self.network.classifier[1].in_features, noutputs, dropout
+            )
+            params = self.network.classifier.parameters()
+        elif arch.startswith("resnet"):
+            self._freeze_model()
+            self.network.fc = _build_classifier(
+                layers, self.network.fc.in_features, noutputs, dropout
+            )
+            params = self.network.fc.parameters()
         else:
-            self.network.fc = _build_classifier(self.hyper_params)
-            self.optimizer = getattr(optim, hp["optimizer"])(
-                self.network.fc.parameters(), lr=hp["learning_rate"]
-            )
+            raise ValueError("Unsupported architecture " + arch)
 
-        self.criterion = getattr(nn, hp["criterion"])()
-        layer_list = [hp["ninputs"]]
-        layer_list.extend(hp["layers"])
-        layer_list.append(hp["nfeatures"])
-        classifier_layers = "x".join([str(x) for x in layer_list])
-        self._meta = {
-            "architecture": hp["architecture"],
-            "layers": classifier_layers,
-            "criterion": hp["criterion"],
-            "optimizer": hp["optimizer"],
-            "learning_rate": hp["learning_rate"],
-        }
-
-    def __repr__(self):
-        return str(self._meta)
+        return params
 
     def checkpoint(self, optimizer=False):
         """
@@ -156,16 +126,11 @@ class Model:
         checkpoint = {
             "state": self.network.to("cpu").state_dict(),
             "hp": self.hyper_params,
+            "class_to_idx": self.class_to_idx,
         }
 
         if optimizer:
             checkpoint["optim"] = self.optimizer.state_dict()
-
-        if self.labels:
-            checkpoint["labels"] = self.labels
-
-        if self.class_to_idx:
-            checkpoint["class_to_idx"] = self.class_to_idx
 
         return checkpoint
 
@@ -183,18 +148,12 @@ class Model:
         """
         restore takes a checkpoint and restores it.
         """
-        labels = None
-        if "labels" in state_data:
-            labels = state_data["labels"]
 
-        class_to_idx = None
-        if "class_to_idx" in state_data:
-            class_to_idx = state_data["class_to_idx"]
-
-        model = Model(state_data["hp"], labels, class_to_idx)
+        class_to_idx = state_data["class_to_idx"]
+        model = Model(state_data["hp"], class_to_idx)
         model.network.load_state_dict(state_data["state"])
 
-        if optim in state_data:
+        if "optim" in state_data:
             model.optimizer.load_state_dict(state_data["optim"])
         return model
 
@@ -240,7 +199,7 @@ class Model:
         self.optimizer.step()
         return (outputs, loss.item())
 
-    def recognize(self, image, topk=5):
+    def recognize(self, image, topk=5, labels=None):
         """
         recognise takes a PIL image of a flower and returns the topk predictions
         for what the network thinks that flower is.
@@ -277,15 +236,31 @@ class Model:
 
         # If we have labels and a mapping from class to index, we can do cool
         # things.
-        if self.labels and self.class_to_idx:
-            predictions = OrderedDict()
+        predictions = OrderedDict()
 
-            for i in enumerate(outputs):
-                klass = self.idx_to_class[indices[i].item()]
-                name = self.labels[klass]
-                predictions[name] = outputs[i].item() * 100
-            return predictions
-        return outputs, indices
+        for i in enumerate(outputs):
+            klass = self.idx_to_class[indices[i].item()]
+            if labels:
+                predictions[labels[klass]] = outputs[i].item() * 100
+            else:
+                predictions[klass] = outputs[i].item() * 100
+        return predictions
+
+
+def _build_classifier(layers, ninputs, nfeatures, dropout):
+    classifier = []
+
+    layer0 = [nn.Linear(ninputs, layers[0]), nn.ReLU(), nn.Dropout(p=dropout)]
+    classifier.extend(layer0)
+
+    for i in range(1, len(layers)):
+        layer = [nn.Linear(layers[i - 1], layers[i], bias=True), nn.ReLU()]
+        classifier.extend(layer)
+
+    classifier.extend(
+        [nn.Linear(layers[-1], nfeatures, bias=True), nn.LogSoftmax(dim=1)]
+    )
+    return nn.Sequential(*classifier)
 
 
 def load(path):
@@ -293,3 +268,12 @@ def load(path):
     Given a path to a checkpoint, load will attempt to restore a model.
     """
     return Model.load(path)
+
+
+def recognize(model, image, topk=5, labels=None):
+    return model.recognize(image, topk, labels)
+
+
+def recognize_path(model, image_path, topk=5, labels=None):
+    image = Image.open(image_path)
+    return recognize(model, image, topk, labels)
