@@ -87,18 +87,7 @@ import gym, model
 
 
 ```python
-hyper_params = {
-    'architecture': 'vgg16',
-    'criterion': 'NLLLoss',
-    'dropout': 0.5,
-    'epochs': 6,
-    'layers': [4096, 4096],
-    'learning_rate': 0.001,
-    'nfeatures': 102,
-    'ninputs': 32,
-    'optimizer': 'Adam',
-}
-flower_model = model.Model(hyper_params, cat_to_name, flowerset.class_to_idx)
+flower_model = model.Model(model.DEFAULT_HYPER_PARAMETERS, flowerset.class_to_idx)
 flower_model.train()
 ```
 
@@ -121,67 +110,66 @@ flower_gym.train()
     INFO: starting deep learning via cuda
     INFO: network is in training mode
     INFO: starting epoch: 0
-    INFO: 0:00:47.876054     32|epoch: 1/6; loss: 4.9425
-    INFO: 0:00:47.757795     64|epoch: 1/6; loss: 3.2358
-    INFO: 0:00:48.176509     96|epoch: 1/6; loss: 2.6345
+    INFO: 0:00:50.544162     32|epoch: 1/6; loss: 4.4795
+    INFO: 0:00:50.134884     64|epoch: 1/6; loss: 3.2694
+    INFO: 0:00:50.417976     96|epoch: 1/6; loss: 2.6439
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.156059: validation accuracy over 818 test images: 57.95% (474/818)
-    INFO: epoch completed in: 0:02:54.906632
+    INFO: 0:00:21.012153: validation accuracy over 818 test images: 59.05% (483/818) | average loss: 0.04646 total loss: 38.01
+    INFO: epoch completed in: 0:03:02.366017
     ------------------------------------------------------------------------
     INFO: network is in training mode
     INFO: starting epoch: 1
-    INFO: 0:00:37.754776    128|epoch: 2/6; loss: 1.7923
-    INFO: 0:00:47.967833    160|epoch: 2/6; loss: 2.0898
-    INFO: 0:00:48.028213    192|epoch: 2/6; loss: 2.0815
+    INFO: 0:00:39.387066    128|epoch: 2/6; loss: 1.7047
+    INFO: 0:00:50.302814    160|epoch: 2/6; loss: 2.0523
+    INFO: 0:00:50.061406    192|epoch: 2/6; loss: 1.8815
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.227740: validation accuracy over 818 test images: 68.7% (562/818)
-    INFO: epoch completed in: 0:02:55.164295
+    INFO: 0:00:21.058764: validation accuracy over 818 test images: 70.42% (576/818) | average loss: 0.03276 total loss: 26.79
+    INFO: epoch completed in: 0:03:01.839900
     ------------------------------------------------------------------------
     INFO: network is in training mode
     INFO: starting epoch: 2
-    INFO: 0:00:27.005811    224|epoch: 3/6; loss: 1.0624
-    INFO: 0:00:48.141598    256|epoch: 3/6; loss: 1.8154
-    INFO: 0:00:48.278903    288|epoch: 3/6; loss: 1.9138
+    INFO: 0:00:27.690532    224|epoch: 3/6; loss: 1.0215
+    INFO: 0:00:49.175756    256|epoch: 3/6; loss: 1.7232
+    INFO: 0:00:49.342655    288|epoch: 3/6; loss: 1.6452
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.285769: validation accuracy over 818 test images: 71.27% (583/818)
-    INFO: epoch completed in: 0:02:55.577171
+    INFO: 0:00:21.039395: validation accuracy over 818 test images: 79.34% (649/818) | average loss: 0.02375 total loss: 19.42
+    INFO: epoch completed in: 0:02:58.737950
     ------------------------------------------------------------------------
     INFO: network is in training mode
     INFO: starting epoch: 3
-    INFO: 0:00:16.505750    320|epoch: 4/6; loss: 0.6268
-    INFO: 0:00:48.327448    352|epoch: 4/6; loss: 1.7338
-    INFO: 0:00:48.169804    384|epoch: 4/6; loss: 1.6873
+    INFO: 0:00:16.982582    320|epoch: 4/6; loss: 0.5398
+    INFO: 0:00:49.268564    352|epoch: 4/6; loss: 1.5632
+    INFO: 0:00:49.078359    384|epoch: 4/6; loss: 1.5307
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.333538: validation accuracy over 818 test images: 77.26% (632/818)
-    INFO: epoch completed in: 0:02:55.724296
+    INFO: 0:00:21.035787: validation accuracy over 818 test images: 82.52% (675/818) | average loss: 0.02137 total loss: 17.48
+    INFO: epoch completed in: 0:02:58.698975
     ------------------------------------------------------------------------
     INFO: network is in training mode
     INFO: starting epoch: 4
-    INFO: 0:00:05.998830    416|epoch: 5/6; loss: 0.2014
-    INFO: 0:00:47.987793    448|epoch: 5/6; loss: 1.5568
-    INFO: 0:00:48.174805    480|epoch: 5/6; loss: 1.5112
-    INFO: 0:00:48.197146    512|epoch: 5/6; loss: 1.6086
+    INFO: 0:00:06.185046    416|epoch: 5/6; loss: 0.1870
+    INFO: 0:00:49.537833    448|epoch: 5/6; loss: 1.3732
+    INFO: 0:00:49.921622    480|epoch: 5/6; loss: 1.4105
+    INFO: 0:00:49.561562    512|epoch: 5/6; loss: 1.3311
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.236486: validation accuracy over 818 test images: 75.92% (621/818)
-    WARN: accuracy has decreased
-    INFO: epoch completed in: 0:02:55.341113
+    INFO: 0:00:20.990801: validation accuracy over 818 test images: 83.01% (679/818) | average loss: 0.01977 total loss: 16.17
+    INFO: epoch completed in: 0:03:00.070147
     ------------------------------------------------------------------------
     INFO: network is in training mode
     INFO: starting epoch: 5
-    INFO: 0:00:43.639985    544|epoch: 6/6; loss: 1.4140
-    INFO: 0:00:48.325554    576|epoch: 6/6; loss: 1.4664
-    INFO: 0:00:48.282197    608|epoch: 6/6; loss: 1.5643
+    INFO: 0:00:44.947244    544|epoch: 6/6; loss: 1.2123
+    INFO: 0:00:49.493807    576|epoch: 6/6; loss: 1.3026
+    INFO: 0:00:49.564753    608|epoch: 6/6; loss: 1.3418
     INFO: running validation evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.242175: validation accuracy over 818 test images: 79.83% (653/818)
-    INFO: epoch completed in: 0:02:55.797475
+    INFO: 0:00:21.083718: validation accuracy over 818 test images: 86.06% (704/818) | average loss: 0.01766 total loss: 14.44
+    INFO: epoch completed in: 0:02:59.814991
     ------------------------------------------------------------------------
-    INFO: training completed in 0:17:32.613345
+    INFO: training completed in 0:18:05.631290
 
 
 ## Testing your network
@@ -195,13 +183,13 @@ flower_gym.evaluate()
 
     INFO: running testing evaluation
     INFO: network is in evaluation mode
-    INFO: 0:00:21.116342: testing accuracy over 819 test images: 79.0% (647/819)
+    INFO: 0:00:22.827611: testing accuracy over 819 test images: 84.37% (691/819) | average loss: 0.01818 total loss: 14.89
 
 
 
 
 
-    0.78998778998779
+    (0.8437118437118437, 0.018182815431238532)
 
 
 
@@ -307,7 +295,7 @@ imshow(process_image('test_image.jpg'))
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f562b46aba8>
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fe7adf43e80>
 
 
 

@@ -17,14 +17,12 @@ log = util.get_logger()
 
 
 def main(args):
-    default_hp = model.DEFAULT_HYPER_PARAMETERS
-
     parser = argparse.ArgumentParser(description="Train a neural network.")
     parser.add_argument(
         "--arch",
         dest="arch",
         action="store",
-        default=default_hp["architecture"],
+        default="vgg",
         help="select a vision model",
     )
     parser.add_argument(
@@ -51,15 +49,15 @@ def main(args):
         type=int,
     )
     parser.add_argument(
+        "--gpu", dest="gpu", action="store_true", help="enable GPU training"
+    )
+    parser.add_argument(
         "--learning_rate",
         dest="learning_rate",
         action="store",
         default=0.01,
         help="training batch size",
         type=float,
-    )
-    parser.add_argument(
-        "--gpu", dest="gpu", action="store_true", help="enable GPU training"
     )
     parser.add_argument(
         "--hidden_units",
@@ -82,29 +80,28 @@ def main(args):
         action="store",
         default=".",
         help="directory to save checkpoints",
-        type=int,
     )
     args = parser.parse_args(args)
-    data = dataset.Dataset(args.data_dir, args.batchsize)
+    data = dataset.Dataset(args.data_dir, args.batch_size)
     hp = copy.copy(model.DEFAULT_HYPER_PARAMETERS)
     hp["architecture"] = args.arch
     hp["learning_rate"] = args.learning_rate
 
     if args.layers:
-        hp["layers"] = [int(l) for l in args.layers]
+        hp["layers"] = [int(l) for l in args.layers.split(",")]
 
-    model = model.Model(hp, data.class_to_idx)
+    nn = model.Model(hp, data.class_to_idx)
 
     if args.gpu:
         device = "cuda"
     else:
         device = "cpu"
-    arena = gym.Gym(model, dataset, args.print_every, device)
+    arena = gym.Gym(nn, data, args.print_every, device)
     arena.train(args.epochs)
     accuracy = arena.evaluate()
     if accuracy >= 0.7:
         checkpoint_path = checkpoint_name(args.save_dir)
-        model.save(checkpoint_path)
+        nn.save(checkpoint_path)
         print("Wrote checkpoint to {}".format(checkpoint_path))
 
 

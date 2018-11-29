@@ -187,6 +187,23 @@ class Model:
         """
         return self.network.forward(inputs)
 
+    def to(self, device):
+        """
+        move the model to the selected device.
+        """
+        self.network.to(device)
+
+    def gpu(self):
+        """
+        convenience function to move the model to the GPU.
+        """
+        return self.to("cuda")
+
+    def cpu(self):
+        """
+        convenience function to move the model to the CPU.
+        """
+
     def backprop(self, inputs, labels):
         """
         backprop runs a forward pass through the network and backpropagates
@@ -234,11 +251,8 @@ class Model:
         outputs.squeeze_(0)
         indices.squeeze_(0)
 
-        # If we have labels and a mapping from class to index, we can do cool
-        # things.
         predictions = OrderedDict()
-
-        for i in enumerate(outputs):
+        for i in range(len(outputs)):
             klass = self.idx_to_class[indices[i].item()]
             if labels:
                 predictions[labels[klass]] = outputs[i].item() * 100
@@ -271,9 +285,17 @@ def load(path):
 
 
 def recognize(model, image, topk=5, labels=None):
+    """
+    recognize is a shortcut for model.recognize(image, topk, labels).
+    """
     return model.recognize(image, topk, labels)
 
 
 def recognize_path(model, image_path, topk=5, labels=None):
+    """
+    recognize_path loads the image stored in image_path and runs the model's recognize
+    method on it.
+    """
+
     image = Image.open(image_path)
-    return recognize(model, image, topk, labels)
+    return model.recognize(image, topk, labels)
