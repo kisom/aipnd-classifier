@@ -98,7 +98,7 @@ def main(args):
         device = "cpu"
     arena = gym.Gym(nn, data, args.print_every, device)
     arena.train(args.epochs)
-    accuracy = arena.evaluate()
+    accuracy, _ = arena.evaluate()
     if accuracy >= 0.7:
         checkpoint_path = checkpoint_name(args.save_dir)
         nn.save(checkpoint_path)
