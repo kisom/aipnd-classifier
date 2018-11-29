@@ -34,6 +34,11 @@ def main(args):
         type=int,
     )
     parser.add_argument(
+        "--checkpoint",
+        dest="checkpoint",
+        help="restore from a checkpoint before training",
+    )
+    parser.add_argument(
         "--data_dir",
         dest="data_dir",
         action="store",
@@ -90,7 +95,11 @@ def main(args):
     if args.layers:
         hp["layers"] = [int(l) for l in args.layers.split(",")]
 
-    nn = model.Model(hp, data.class_to_idx)
+    if args.checkpoint:
+        nn = model.load(args.checkpoint)
+    else:
+        nn = model.Model(hp, data.class_to_idx)
+    
 
     if args.gpu:
         device = "cuda"
